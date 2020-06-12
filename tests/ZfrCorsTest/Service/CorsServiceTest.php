@@ -178,6 +178,32 @@ class CorsServiceTest extends TestCase
         $this->assertEquals('http://subdomain.example.com', $headerValue);
     }
 
+    public function testAllowOriginWithRegex()
+    {
+        $request  = new HttpRequest();
+        $request->getHeaders()->addHeaderLine('Origin', 'http://subdomain.example.com');
+        $this->corsOptions->setAllowedOrigins(['/(https|http)?:\/\/([a-z0-9]+[.])*(example)[.](com)/i']);
+
+        $response = $this->corsService->createPreflightCorsResponse($request);
+
+        $headers = $response->getHeaders();
+        $headerValue = $headers->get('Access-Control-Allow-Origin')->getFieldValue();
+        $this->assertEquals('http://subdomain.example.com', $headerValue);
+    }
+
+    public function testAllowOriginWithHttpsRegex()
+    {
+        $request  = new HttpRequest();
+        $request->getHeaders()->addHeaderLine('Origin', 'https://another.at');
+        $this->corsOptions->setAllowedOrigins(['/(https|http)?:\/\/([a-z0-9]+[.])*(example|another)[.](com|at)/i']);
+
+        $response = $this->corsService->createPreflightCorsResponse($request);
+
+        $headers = $response->getHeaders();
+        $headerValue = $headers->get('Access-Control-Allow-Origin')->getFieldValue();
+        $this->assertEquals('https://another.at', $headerValue);
+    }
+
     public function testCanReturnWildCardSubDomainWithSchemeAllowOrigin()
     {
         $request  = new HttpRequest();
@@ -248,7 +274,7 @@ class CorsServiceTest extends TestCase
 
         $this->assertFalse($headers->get('Origin'));
         $this->assertNotFalse($headers->get('Vary'));
-        $this->assertContains('Origin', $headers->get('Vary')->getFieldValue());
+        $this->assertStringContainsString('Origin', $headers->get('Vary')->getFieldValue());
     }
 
     public function testEnsureNoVaryHeaderWhenAcceptsAnyOrigin()

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="build" basedir=".">
+
+    <description>A standard build file for zend framework 2 projects. It provides a series of tools to easily run against the project.</description>
+
+    <!-- build folder -->
+    <property name="dir.build" value="data/build"/>
+    <property name="dir.build.coverage" value="${dir.build}/coverage"/>
+    <property name="dir.build.pdepend" value="${dir.build}/pdepend"/>
+    <property name="dir.build.logs" value="${dir.build}/logs"/>
+
+    <!-- miscellaneous folder-->
+    <property name="dir.module" value="src"/>
+    <property name="dir.test" value="tests"/>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="lint" description="Perform syntax check of sourcecode files">
+        <apply executable="php" failonerror="true">
+            <arg value="-l"/>
+            <fileset dir="${basedir}/${dir.module}">
+                <include name="**/*.php"/>
+                <modified/>
+            </fileset>
+        </apply>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean-pdepend" description="Clean up artifact directories and files for PHP_Depend">
+        <delete file="${basedir}/${dir.build.logs}/jdepend.xml"/>
+        <delete file="${basedir}/${dir.build.pdepend}/dependencies.svg"/>
+        <delete file="${basedir}/${dir.build.pdepend}/overview-pyramid.svg"/>
+    </target>
+
+    <target name="pdepend" depends="clean-pdepend,prepare" description="Calculate software metrics using PHP_Depend">
+        <exec executable="./bin/pdepend">
+            <arg value="--jdepend-xml=${basedir}/${dir.build.logs}/jdepend.xml"/>
+            <arg value="--jdepend-chart=${basedir}/${dir.build.pdepend}/dependencies.svg"/>
+            <arg value="--overview-pyramid=${basedir}/${dir.build.pdepend}/overview-pyramid.svg"/>
+            <arg path="${basedir}/${dir.module}"/>
+        </exec>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean-phpcpd" description="Clean up artifact directories and files for PHPCPD">
+        <delete file="${basedir}/${dir.build.logs}/pmd-cpd.xml"/>
+    </target>
+
+    <target name="phpcpd" description="Find duplicate code using PHPCPD">
+        <exec executable="./bin/phpcpd">
+            <arg path="${basedir}/${dir.module}"/>
+        </exec>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean-phpcs" description="Clean up artifact directories and files for PHP CodeSniffer">
+        <delete file="${basedir}/${dir.build.logs}/checkstyle.xml"/>
+    </target>
+
+    <target name="phpcs"
+            description="Generate a checkstyle.xml and print a full report to stdout. Using PSR-2 as coding standard">
+        <exec executable="./bin/phpcs">
+            <arg value="--report=checkstyle"/>
+            <arg value="--report-checkstyle=${basedir}/${dir.build.logs}/checkstyle.xml"/>
+            <arg value="--extensions=php"/>
+            <arg value="--encoding=UTF-8"/>
+            <arg value="--ignore=autoload_classmap*"/>
+            <arg value="--standard=PSR2"/>
+            <arg value="${basedir}/${dir.module}"/>
+        </exec>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean-phploc" description="Clean up artifact directories and files for PHPLOC">
+        <delete file="${basedir}/${dir.build.logs}/phploc.csv"/>
+    </target>
+
+    <target name="phploc" description="Measure project size using PHPLOC">
+        <exec executable="./bin/phploc">
+            <arg value="--ansi"/>
+            <arg value="--no-interaction"/>
+            <arg path="${basedir}/${dir.module}"/>
+        </exec>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean-phpmd" description="Clean up artifact directories and files for PHPMD">
+        <delete file="${basedir}/${dir.build.logs}/pmd.xml"/>
+    </target>
+
+    <target name="phpmd" description="Perform project mess detection using PHPMD and print human readable output">
+        <exec executable="./bin/phpmd">
+            <arg path="${basedir}/${dir.module}"/>
+            <arg value="xml"/>
+            <arg value="codesize,controversial,design,unusedcode"/>
+            <arg value="--reportfile"/>
+            <arg value="${basedir}/${dir.build.logs}/pmd.xml"/>
+        </exec>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean-phpunit" description="Clean up artifact directories and files for PHPUnit">
+        <delete includeemptydirs="true">
+            <fileset dir="${basedir}/${dir.build.coverage}" includes="**/*" erroronmissingdir="false"/>
+        </delete>
+        <delete file="${basedir}/${dir.build.logs}/clover.xml"/>
+        <delete file="${basedir}/${dir.build.logs}/junit.xml"/>
+    </target>
+
+    <target name="phpunit" description="Run unit tests using PHPUnit and print a report to stdout">
+        <exec executable="./bin/phpunit" failonerror="true">
+            <arg line="--configuration '${basedir}/${dir.test}/phpunit.xml' --colors=always --coverage-html='${basedir}/${dir.build.coverage}'"/>
+        </exec>
+    </target>
+
+    <!-- ========================================================================================================= -->
+
+    <target name="clean"
+            depends="clean-pdepend,clean-phpcpd,clean-phpcs,clean-phploc,clean-phpmd,clean-phpunit"
+            description="Clean up artifact directories">
+        <delete dir="${basedir}/${dir.build.coverage}"/>
+        <delete dir="${basedir}/${dir.build.logs}"/>
+        <delete dir="${basedir}/${dir.build.pdepend}"/>
+        <delete dir="${basedir}/${dir.build}"/>
+    </target>
+
+    <target name="prepare" description="Create artifact directories">
+        <mkdir dir="${basedir}/${dir.build}"/>
+        <mkdir dir="${basedir}/${dir.build.coverage}"/>
+        <mkdir dir="${basedir}/${dir.build.logs}"/>
+        <mkdir dir="${basedir}/${dir.build.pdepend}"/>
+    </target>
+
+    <target name="update" description="Update the package dependencies">
+        <exec executable="php" dir="${basedir}">
+            <arg line="composer.phar update --optimize-autoloader --no-interaction"/>
+        </exec>
+    </target>
+
+
+    <target name="install" description="Install the package dependencies">
+        <exec executable="php" dir="${basedir}">
+            <arg line="composer.phar install --optimize-autoloader --no-interaction"/>
+        </exec>
+    </target>
+    <target name="dir.check">
+      <condition property="dir.exists">
+        <available file="${basedir}/data/oauth" type="dir"/>
+      </condition>
+    </target>
+
+    <target
+            name="build"
+            depends="clean,prepare,install,pdepend,phploc,lint,phpcpd,phpcs,phpmd,phpunit"
+            />
+</project>

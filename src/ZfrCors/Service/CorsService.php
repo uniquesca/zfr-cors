@@ -208,9 +208,20 @@ class CorsService
             if (in_array('*', $allowedOrigins)) {
                 return $origin;
             }
-            foreach ($allowedOrigins as $allowedOrigin) {
-                if (fnmatch($allowedOrigin, $origin)) {
-                    return $origin;
+            if (count($allowedOrigins) == 1) {
+                $allowedOrigin = $allowedOrigins[0];
+                if (preg_match("/^\/.+\/[a-z]*$/i", $allowedOrigin)) {
+                    if (preg_match($allowedOrigin, $origin, $matches)) {
+                        return $origin;
+                    }
+                } else {
+                    return fnmatch($allowedOrigin, $origin) ? $origin : 'null';
+                }
+            } else {
+                foreach ($allowedOrigins as $allowedOrigin) {
+                    if (fnmatch($allowedOrigin, $origin)) {
+                        return $origin;
+                    }
                 }
             }
         }

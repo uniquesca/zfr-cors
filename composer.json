@@ -1,5 +1,5 @@
 {
-    "name": "zfr/zfr-cors",
+    "name": "monstrum/zfr-cors",
     "description": "Zend Framework module that let you deal with CORS requests",
     "type": "library",
     "license": "MIT",
@@ -42,7 +42,11 @@
         "zendframework/zend-view": "^2.8.1",
         "phpunit/phpunit": "^7.5.18 || ^8.5.1",
         "php-coveralls/php-coveralls": "^2.1",
-        "squizlabs/php_codesniffer": "^3.4"
+        "squizlabs/php_codesniffer": "^3.4",
+        "pdepend/pdepend" : "2.5.*",
+        "sebastian/phpcpd" : "4.*",
+        "phploc/phploc" : "5.*",
+        "phpmd/phpmd" : "2.6.*"
     },
     "autoload": {
         "psr-0": {
@@ -60,5 +64,10 @@
         "test": "phpunit",
         "test-coverage": "phpunit --coverage-clover build/logs/clover.xml",
         "upload-coverage": "php-coveralls -v"
+    },
+    "config" : {
+        "secure-http" : false,
+        "bin-dir" : "bin/",
+        "discard-changes" : true
     }
 }
