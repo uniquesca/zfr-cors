@@ -204,6 +204,19 @@ class CorsServiceTest extends TestCase
         $this->assertEquals('https://another.at', $headerValue);
     }
 
+    public function testAllowLocalhostOrigin()
+    {
+        $request  = new HttpRequest();
+        $request->getHeaders()->addHeaderLine('Origin', 'https://localhost:8085');
+        $this->corsOptions->setAllowedOrigins(['/(https|http)?:\/\/([a-z0-9]+[.])*(localhost|example)([.](com|at))*/i']);
+
+        $response = $this->corsService->createPreflightCorsResponse($request);
+
+        $headers = $response->getHeaders();
+        $headerValue = $headers->get('Access-Control-Allow-Origin')->getFieldValue();
+        $this->assertEquals('https://localhost:8085', $headerValue);
+    }
+
     public function testCanReturnWildCardSubDomainWithSchemeAllowOrigin()
     {
         $request  = new HttpRequest();
